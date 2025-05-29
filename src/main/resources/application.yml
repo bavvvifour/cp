@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: CP
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/CP
+    username: postgres
+    password: 1234
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 1000MB
+  #    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true

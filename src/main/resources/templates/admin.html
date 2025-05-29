@@ -1,0 +1,738 @@
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Админ панель</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #d3d3d3;
+            margin: 0;
+            padding: 20px;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        nav .menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: black;
+        }
+
+        nav .active span {
+            text-decoration: underline;
+        }
+
+        .green-icon {
+            width: 40px;
+            height: 40px;
+            background-color: limegreen;
+            border-radius: 50%;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            max-width: 900px;
+            margin: 0 auto 40px auto;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            justify-items: center;
+        }
+
+        .product-card {
+            position: relative;
+            background-color: #fbb;
+            border-radius: 10px;
+            text-align: center;
+            padding: 15px;
+            width: 100%;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .product-card.sold {
+            background-color: #e0e0e0;
+            opacity: 0.7;
+            position: relative;
+            transform: scale(0.95);
+        }
+
+        .product-card.sold::after {
+            content: "ПРОДАНО";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            font-weight: bold;
+            color: #4CAF50;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 15px;
+            border-radius: 20px;
+            z-index: 2;
+        }
+
+        .product-card p {
+            margin: 5px 0;
+            word-wrap: break-word;
+            overflow: hidden;
+        }
+
+        .product-card img {
+            max-width: 100%;
+            max-height: 100px;
+            object-fit: contain;
+            margin: 0 auto;
+        }
+
+        .price-control {
+            margin-top: 10px;
+        }
+
+        .price-input {
+            width: 80px;
+            padding: 5px;
+            text-align: center;
+            margin-right: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .update-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .history-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .item-menu-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+        }
+
+        .item-menu-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .action-modal {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 0;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            min-width: 150px;
+        }
+
+        .action-modal button {
+            display: block;
+            width: 100%;
+            padding: 8px 15px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .action-modal button:hover {
+            background: #f5f5f5;
+        }
+
+        .delete-btn {
+            color: #ff4444;
+        }
+
+        .sold-btn {
+            color: #4CAF50;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 60%;
+            max-width: 600px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            padding: 10px 0;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 10px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-date {
+            width: 150px;
+        }
+
+        .history-price {
+            width: 200px;
+            text-align: center;
+        }
+
+        .history-user {
+            width: 150px;
+            text-align: right;
+            font-style: italic;
+            color: #555;
+        }
+
+        .no-history {
+            color: #777;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .sold-products-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px dashed #aaa;
+        }
+
+        .sold-products-title {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .redemption-info {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 5px;
+        }
+
+        .redemption-info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .set-date-btn, .update-date-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .update-date-btn {
+            background-color: #FF9800;
+        }
+
+        .date-control {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="menu">
+        <div class="green-icon"></div>
+        <a th:href="@{/admin}" class="active">
+            <span th:if="${#authorization.expression('hasRole(''ADMIN'')')}">Admin_page</span>
+        </a>
+        <a th:href="@{/products}"><span>Home</span></a>
+        <a th:href="@{/product_evaluation}"><span>Product_evaluation</span></a>
+        <a th:href="@{/profile}"><span>Profile</span></a>
+    </div>
+    <div th:text="${username}">FIO</div>
+</nav>
+
+<div class="section">
+    <h2>Активные товары</h2>
+
+    <div class="product-grid" id="activeProducts">
+        <div class="product-card"
+             th:each="product : ${allProducts}"
+             th:unless="${product.status == T(sfu.cp.model.Product.Status).SOLD}"
+             th:attr="data-id=${product.id}">
+            <button class="item-menu-btn" onclick="toggleActionMenu(this)">⋮</button>
+            <div class="action-modal">
+                <button class="delete-btn" th:onclick="'deleteItem(' + ${product.id} + ')'">Удалить</button>
+                <button class="sold-btn" th:onclick="'markAsSold(' + ${product.id} + ')'">Продано</button>
+            </div>
+
+            <p th:text="${product.modelName}">Название</p>
+            <img th:if="${product.imagePath}" th:src="@{${product.imagePath}}" alt="Изображение товара">
+
+            <div class="price-control">
+                <input type="hidden" name="productId" th:value="${product.id}">
+                <input type="number" class="price-input" name="newPrice" th:value="${product.price}" step="0.01"
+                       min="0">
+                <button class="update-btn">Обновить</button>
+            </div>
+
+            <div class="redemption-info" th:if="${product.redemptionDate}">
+                <p>Дата возврата: <span th:text="${#temporals.format(product.redemptionDate, 'dd.MM.yyyy')}"></span></p>
+                <p>Сумма займа: <span th:text="${product.loanAmount} + '₽'"></span></p>
+                <button class="update-date-btn" th:onclick="'showSetDateModal(' + ${product.id} + ')'">Изменить</button>
+            </div>
+            <div class="redemption-info" th:unless="${product.redemptionDate}">
+                <button class="set-date-btn" th:onclick="'showSetDateModal(' + ${product.id} + ')'">Установить дату
+                    возврата
+                </button>
+            </div>
+
+            <button class="history-btn" th:onclick="'showHistoryModal(\'' + 'history-' + ${product.id} + '\')'">История
+                изменений
+            </button>
+
+            <div th:id="'history-' + ${product.id}" style="display: none;">
+                <h3 style="text-align: center; margin-bottom: 15px;"
+                    th:text="${'История цен: ' + product.modelName}"></h3>
+                <div class="history-header">
+                    <span class="history-date">Дата</span>
+                    <span class="history-price">Изменение цены</span>
+                    <span class="history-user">Администратор</span>
+                </div>
+                <div class="history-item" th:each="history : ${product.priceHistory}">
+                    <span class="history-date"
+                          th:text="${#temporals.format(history.changeDate, 'dd.MM.yyyy HH:mm')}"></span>
+                    <span class="history-price" th:text="${history.oldPrice} + ' → ' + history.newPrice + '₽'"></span>
+                    <span class="history-user" th:text="${history.changedBy.fio}"></span>
+                </div>
+                <div class="no-history" th:if="${product.priceHistory.empty}">Нет истории изменений</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sold-products-section"
+         th:if="${#lists.contains(allProducts.![status], T(sfu.cp.model.Product.Status).SOLD)}">
+        <h3 class="sold-products-title">Проданные товары</h3>
+        <div class="product-grid" id="soldProducts">
+            <div class="product-card sold"
+                 th:each="product : ${allProducts}"
+                 th:if="${product.status == T(sfu.cp.model.Product.Status).SOLD}"
+                 th:attr="data-id=${product.id}">
+                <button class="item-menu-btn" onclick="toggleActionMenu(this)">⋮</button>
+                <div class="action-modal">
+                    <button class="delete-btn" th:onclick="'deleteItem(' + ${product.id} + ')'">Удалить</button>
+                </div>
+
+                <p th:text="${product.modelName}">Название</p>
+                <img th:if="${product.imagePath}" th:src="@{${product.imagePath}}" alt="Изображение товара">
+
+                <div class="price-control">
+                    <input type="hidden" name="productId" th:value="${product.id}">
+                    <input type="number" class="price-input" name="newPrice" th:value="${product.price}" step="0.01"
+                           min="0" disabled>
+                    <button class="update-btn" disabled>Обновить</button>
+                </div>
+
+                <div class="redemption-info" th:if="${product.redemptionDate}">
+                    <p>Дата возврата: <span th:text="${#temporals.format(product.redemptionDate, 'dd.MM.yyyy')}"></span>
+                    </p>
+                    <p>Сумма займа: <span th:text="${product.loanAmount} + '₽'"></span></p>
+                </div>
+
+                <button class="history-btn" th:onclick="'showHistoryModal(\'' + 'history-' + ${product.id} + '\')'">
+                    История изменений
+                </button>
+
+                <div th:id="'history-' + ${product.id}" style="display: none;">
+                    <h3 style="text-align: center; margin-bottom: 15px;"
+                        th:text="${'История цен: ' + product.modelName}"></h3>
+                    <div class="history-header">
+                        <span class="history-date">Дата</span>
+                        <span class="history-price">Изменение цены</span>
+                        <span class="history-user">Администратор</span>
+                    </div>
+                    <div class="history-item" th:each="history : ${product.priceHistory}">
+                        <span class="history-date"
+                              th:text="${#temporals.format(history.changeDate, 'dd.MM.yyyy HH:mm')}"></span>
+                        <span class="history-price"
+                              th:text="${history.oldPrice} + ' → ' + history.newPrice + '₽'"></span>
+                        <span class="history-user" th:text="${history.changedBy.fio}"></span>
+                    </div>
+                    <div class="no-history" th:if="${product.priceHistory.empty}">Нет истории изменений</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="historyModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div id="modalHistoryContent"></div>
+    </div>
+</div>
+
+<div id="setDateModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeSetDateModal()">&times;</span>
+        <h3 style="text-align: center;">Управление датой возврата</h3>
+        <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+            <div>
+                <label>Дата возврата:</label>
+                <input type="date" id="redemptionDateInput" style="width: 100%; padding: 8px; margin-top: 5px;">
+            </div>
+            <div>
+                <label>Сумма займа (50-70% от цены):</label>
+                <input type="number" id="loanAmountInput" step="0.01" min="0"
+                       style="width: 100%; padding: 8px; margin-top: 5px;">
+            </div>
+            <button onclick="submitRedemptionDate()"
+                    style="background-color: #4CAF50; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">
+                Сохранить
+            </button>
+            <button onclick="clearRedemptionDate()"
+                    style="background-color: #f44336; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">
+                Удалить дату
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function toggleActionMenu(button) {
+            const modal = button.nextElementSibling;
+            const allModals = document.querySelectorAll('.action-modal');
+
+            allModals.forEach(m => {
+                if (m !== modal) m.style.display = 'none';
+            });
+
+            modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+        }
+
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest('.item-menu-btn') && !event.target.closest('.action-modal')) {
+                document.querySelectorAll('.action-modal').forEach(modal => {
+                    modal.style.display = 'none';
+                });
+            }
+        });
+
+        function deleteItem(productId) {
+            if (confirm('Вы уверены, что хотите удалить этот товар?')) {
+                fetch('/delete-product/' + productId, {
+                    method: 'POST'
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            location.reload();
+                        } else {
+                            alert('Ошибка при удалении');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ошибка при удалении');
+                    });
+            }
+        }
+
+        function markAsSold(productId) {
+            if (confirm('Отметить товар как проданный?')) {
+                fetch('/mark-sold/' + productId, {
+                    method: 'POST'
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            const productCard = document.querySelector(`.product-card[data-id="${productId}"]`);
+                            if (productCard) {
+                                productCard.classList.add('sold');
+
+                                productCard.style.transition = 'all 0.5s ease';
+                                productCard.style.transform = 'scale(0.9)';
+
+                                setTimeout(() => {
+                                    const soldProductsSection = document.querySelector('.sold-products-section');
+                                    const soldProductsGrid = document.querySelector('#soldProducts');
+
+                                    if (!soldProductsSection) {
+                                        const section = document.createElement('div');
+                                        section.className = 'sold-products-section';
+                                        section.innerHTML = `
+                            <h3 class="sold-products-title">Проданные товары</h3>
+                            <div class="product-grid" id="soldProducts"></div>
+                          `;
+                                        document.querySelector('.section').appendChild(section);
+                                    }
+
+                                    document.querySelector('#soldProducts').appendChild(productCard);
+
+                                    const soldBtn = productCard.querySelector('.sold-btn');
+                                    if (soldBtn) soldBtn.remove();
+
+                                    const priceInput = productCard.querySelector('.price-input');
+                                    const updateBtn = productCard.querySelector('.update-btn');
+                                    if (priceInput) priceInput.disabled = true;
+                                    if (updateBtn) updateBtn.disabled = true;
+
+                                    setTimeout(() => {
+                                        productCard.style.transform = 'scale(0.95)';
+                                    }, 10);
+                                }, 300);
+                            }
+                        } else {
+                            alert('Ошибка при обновлении статуса');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ошибка при обновлении статуса');
+                    });
+            }
+        }
+
+        function showHistoryModal(historyId) {
+            const historyElement = document.getElementById(historyId);
+
+            if (!historyElement) {
+                console.error("Element not found with ID:", historyId);
+                return;
+            }
+
+            const historyContent = historyElement.cloneNode(true);
+            historyContent.style.display = 'block';
+
+            document.getElementById('modalHistoryContent').innerHTML = '';
+            document.getElementById('modalHistoryContent').appendChild(historyContent);
+            document.getElementById('historyModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('historyModal').style.display = 'none';
+        }
+
+        let currentProductIdForDateSetting = null;
+
+        function showSetDateModal(productId) {
+            currentProductIdForDateSetting = productId;
+            const productCard = document.querySelector(`.product-card[data-id="${productId}"]`);
+            const price = productCard.querySelector('.price-input').value;
+
+            const loanAmountInput = document.getElementById('loanAmountInput');
+            const dateInput = document.getElementById('redemptionDateInput');
+
+            loanAmountInput.value = (price * 0.6).toFixed(2);
+            loanAmountInput.setAttribute('max', (price * 0.7).toFixed(2));
+            loanAmountInput.setAttribute('min', (price * 0.5).toFixed(2));
+
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            dateInput.min = tomorrow.toISOString().split('T')[0];
+
+            const redemptionInfo = productCard.querySelector('.redemption-info');
+            if (redemptionInfo && redemptionInfo.querySelector('span')) {
+                const currentDate = redemptionInfo.querySelector('span').textContent;
+                const currentAmount = redemptionInfo.querySelectorAll('span')[1].textContent.replace('₽', '');
+
+                const [day, month, year] = currentDate.split('.');
+                dateInput.value = `${year}-${month}-${day}`;
+                loanAmountInput.value = currentAmount;
+            }
+
+            document.getElementById('setDateModal').style.display = 'block';
+            document.querySelectorAll('.action-modal').forEach(m => m.style.display = 'none');
+        }
+
+        function closeSetDateModal() {
+            document.getElementById('setDateModal').style.display = 'none';
+        }
+
+        function submitRedemptionDate() {
+            const dateInput = document.getElementById('redemptionDateInput').value;
+            const loanAmount = document.getElementById('loanAmountInput').value;
+
+            if (!dateInput || !loanAmount) {
+                alert('Пожалуйста, заполните все поля');
+                return;
+            }
+
+            fetch('/set-redemption-date/' + currentProductIdForDateSetting, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `redemptionDate=${dateInput}&loanAmount=${loanAmount}`
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Дата возврата и сумма займа успешно установлены');
+                        closeSetDateModal();
+                        location.reload();
+                    } else {
+                        throw new Error('Ошибка сервера');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Ошибка при установке даты: ' + error.message);
+                });
+        }
+
+        function clearRedemptionDate() {
+            if (confirm('Удалить дату возврата для этого товара?')) {
+                fetch('/clear-redemption-date/' + currentProductIdForDateSetting, {
+                    method: 'POST'
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            location.reload();
+                        } else {
+                            alert('Ошибка при удалении даты');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ошибка при удалении даты');
+                    });
+            }
+        }
+
+        document.querySelectorAll('.update-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const productId = this.parentElement.querySelector('input[name="productId"]').value;
+                const newPrice = this.parentElement.querySelector('input[name="newPrice"]').value;
+
+                if (!newPrice || isNaN(newPrice)) {
+                    alert('Пожалуйста, введите корректную цену');
+                    return;
+                }
+
+                fetch('/admin/update-price', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `productId=${productId}&newPrice=${newPrice}`
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Цена успешно обновлена');
+                            location.reload();
+                        } else {
+                            throw new Error('Ошибка сервера');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ошибка при обновлении цены: ' + error.message);
+                    });
+            });
+        });
+
+        window.onclick = function (event) {
+            const historyModal = document.getElementById('historyModal');
+            const setDateModal = document.getElementById('setDateModal');
+            if (event.target == historyModal) {
+                closeModal();
+            }
+            if (event.target == setDateModal) {
+                closeSetDateModal();
+            }
+        };
+
+        window.toggleActionMenu = toggleActionMenu;
+        window.deleteItem = deleteItem;
+        window.markAsSold = markAsSold;
+        window.showHistoryModal = showHistoryModal;
+        window.closeModal = closeModal;
+        window.showSetDateModal = showSetDateModal;
+        window.closeSetDateModal = closeSetDateModal;
+        window.submitRedemptionDate = submitRedemptionDate;
+        window.clearRedemptionDate = clearRedemptionDate;
+    });
+</script>
+</body>
+</html>

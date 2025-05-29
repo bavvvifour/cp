@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Auth Page</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            width: 350px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            cursor: pointer;
+            padding: 10px;
+            font-weight: bold;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            border-color: red;
+        }
+
+        .form {
+            display: none;
+            flex-direction: column;
+        }
+
+        .form.active {
+            display: flex;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 8px;
+            background-color: #a19191;
+            color: white;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .checkbox-group input {
+            margin-right: 5px;
+            accent-color: #b1ff00;
+        }
+
+        .submit-btn {
+            background-color: #d9c265;
+            border: none;
+            padding: 10px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .forgot {
+            text-align: center;
+            color: #c2baba;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('signin')">Sign in</div>
+        <div class="tab" onclick="switchTab('signup')">Sign up</div>
+    </div>
+
+    <form id="signin" class="form active" action="/login" method="post">
+        <input type="text" name="username" placeholder="Phone number" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <div class="checkbox-group">
+            <input type="checkbox" id="keep-signed-in">
+            <label for="keep-signed-in" style="color: red;">Keep me signed in</label>
+        </div>
+        <button type="submit" class="submit-btn">Sign in</button>
+        <div class="forgot">Forgot password</div>
+        <div th:if="${param.error}" style="color: red; margin-bottom: 10px;">
+            Invalid username or password
+        </div>
+        <div th:if="${param.logout}" style="color: green; margin-bottom: 10px;">
+            You have been logged out
+        </div>
+    </form>
+
+    <form id="signup" class="form" action="/register" method="post">
+        <input type="text" name="fio" placeholder="FIO" required>
+        <input type="text" name="phone" placeholder="Phone number" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="text" name="seriesNumber" placeholder="Series and number" required>
+        <input type="text" name="issuedBy" placeholder="Issued by whom" required>
+        <input type="text" name="issuedDate" placeholder="When issued" required>
+        <input type="text" name="registrationPlace" placeholder="Place of registration" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <input type="password" name="confirm" placeholder="Confirm password" required>
+        <button type="submit" class="submit-btn">Sign up</button>
+    </form>
+</div>
+
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.form').forEach(form => form.classList.remove('active'));
+        document.querySelector(`.tab[onclick*="${tabId}"]`).classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+</script>
+
+</body>
+</html>

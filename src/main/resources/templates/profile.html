@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #d3d3d3;
+            margin: 0;
+            padding: 20px;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        nav .menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        nav span {
+            color: black;
+            cursor: pointer;
+        }
+
+        nav .menu a {
+            text-decoration: none;
+            color: black;
+            font-weight: 500;
+        }
+
+        nav .menu a.active {
+            text-decoration: underline;
+        }
+
+        .green-icon {
+            width: 40px;
+            height: 40px;
+            background-color: limegreen;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 40px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px 20px;
+            justify-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .product-card {
+            width: 180px;
+            height: 240px;
+            background-color: #fbb;
+            border-radius: 10px;
+            text-align: center;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .product-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            font-size: 14px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        /* История операций */
+        .history-list {
+            margin-top: 1rem;
+        }
+
+        .history-header {
+            display: grid;
+            grid-template-columns: 120px 1fr 100px;
+            padding: 0.75rem 1rem;
+            background-color: #f5f5f5;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-item {
+            display: grid;
+            grid-template-columns: 120px 1fr 100px;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-price {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <nav>
+        <div class="menu">
+            <div class="green-icon"></div>
+            <a th:href="@{/admin}" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+                <span>Admin_page</span>
+            </a>
+            <a th:href="@{/products}"><span>Home</span></a>
+            <a th:href="@{/product_evaluation}"><span>Product_evaluation</span></a>
+            <a th:href="@{/profile}" class="active"><span>Profile</span></a>
+        </div>
+        <div th:text="${userFio}"></div>
+    </nav>
+
+    <section>
+        <h2>Мои заложенные товары</h2>
+
+        <div class="product-grid" th:if="${not #lists.isEmpty(products)}">
+            <div class="product-card"
+                 th:each="product : ${products}"
+                 th:classappend="${product.status.name() == 'CONFISCATED'} ? 'confiscated' : (${product.redemptionDate != null and product.redemptionDate.isBefore(T(java.time.LocalDate).now())} ? 'overdue' : '')">
+                <div class="product-name" th:text="${product.modelName}">Название</div>
+                <img th:if="${product.imagePath}" th:src="@{${product.imagePath}}" alt="Изображение">
+                <div th:unless="${product.imagePath}" class="product-image"></div>
+
+                <div class="product-price">
+                    <span th:if="${product.redemptionDate != null}"
+                          th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 2, 'POINT')} + ' ₽ (с комиссией)'">
+            Цена с комиссией
+          </span>
+                    <span th:if="${product.redemptionDate == null and product.loanAmount != null}"
+                          th:text="${#numbers.formatDecimal(product.loanAmount, 0, 'COMMA', 2, 'POINT')} + ' ₽ (без комиссии)'">
+            Цена без комиссии
+          </span>
+                    <span th:if="${product.loanAmount == null}">
+            На рассмотрении администратора
+          </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(products)}">
+            У вас нет заложенных товаров
+        </div>
+    </section>
+
+    <section th:if="${not #lists.isEmpty(priceHistory.?[product.status.name() == 'CONFISCATED'])}">
+        <h2>История операций</h2>
+
+        <div class="history-list">
+            <div class="history-header">
+                <span>Дата</span>
+                <span>Товар</span>
+                <span class="history-price">Сумма</span>
+            </div>
+
+            <div class="history-item" th:each="history : ${priceHistory}"
+                 th:if="${history.product.status.name() == 'CONFISCATED'}">
+                <span th:text="${#temporals.format(history.changeDate, 'dd.MM.yyyy')}"></span>
+                <span th:text="${history.product.modelName}"></span>
+                <span class="history-price"
+                      th:text="${#numbers.formatDecimal(history.newPrice, 0, 'COMMA', 2, 'POINT')} + ' ₽'"></span>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

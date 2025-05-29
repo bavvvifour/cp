@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Наш ассортимент</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #d3d3d3;
+            margin: 0;
+            padding: 20px;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        nav .menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        nav span {
+            color: black;
+            cursor: pointer;
+        }
+
+        nav .active {
+            text-decoration: underline;
+        }
+
+        .green-icon {
+            width: 40px;
+            height: 40px;
+            background-color: limegreen;
+            border-radius: 50%;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 40px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px 20px;
+            justify-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .product-card {
+            width: 180px;
+            height: 240px;
+            background-color: #fbb;
+            border-radius: 10px;
+            text-align: center;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .product-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            font-size: 14px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        nav .menu a {
+            text-decoration: none;
+        }
+
+        nav .menu a span {
+            text-decoration: none;
+        }
+
+        nav .menu a span.active {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="menu">
+        <div class="green-icon"></div>
+        <a th:href="@{/admin}">
+            <span th:if="${#authorization.expression('hasRole(''ADMIN'')')}">Admin_page</span>
+        </a>
+        <a th:href="@{/products}"><span class="active">Home</span></a>
+        <a th:href="@{/product_evaluation}"><span>Product_evaluation</span></a>
+        <a th:href="@{/profile}"><span>Profile</span></a>
+    </div>
+    <div>FIO</div>
+</nav>
+
+<h2>Наш ассортимент</h2>
+
+<div class="product-grid">
+    <div class="product-card"
+         th:each="product : ${products}"
+         th:unless="${product.status == T(sfu.cp.model.Product.Status).SOLD}"
+         th:if="${product.price != null}">
+        <div class="product-name" th:text="${product.modelName}">Название</div>
+        <img th:src="@{${product.imagePath}}" alt="Изображение">
+        <div class="product-price" th:text="${product.price} + ' ₽'">Цена</div>
+    </div>
+</div>
+</body>
+</html>
